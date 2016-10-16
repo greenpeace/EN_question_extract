@@ -1,4 +1,17 @@
 <?php
+/*
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+set_time_limit(300);
+*/
+/*
+$_REQUEST['m']='fetch';
+$_REQUEST['en_token']='ae10da26-53aa-461d-a7c6-99e60cdf12b6';
+$_REQUEST['is_new']='15031';
+$_REQUEST['first_action']='15032';
+$_REQUEST['last_action']='15033';
+*/
 if(!$_REQUEST['m']){
 	echo "<form method='post' action='?'>";
 	echo "<input type='hidden' name='m' value='fetch'>";
@@ -9,6 +22,7 @@ if(!$_REQUEST['m']){
 	echo "<input type='submit' value='Get it'>";
 	}
 elseif ($_REQUEST['m']=="fetch") {
+	echo "start fetch<br>";
 	if(!($_REQUEST['is_new']&&$_REQUEST['first_action']&&$_REQUEST['last_action'])){echo "Please give correct information";exit;}
 	$en_token=$_REQUEST['en_token'];
 	$q_list['is_new']=$_REQUEST['is_new'];
@@ -24,6 +38,7 @@ $is_new_setting=$settings.$q_list['is_new'];
 $frist_action_setting=$settings.$q_list['first_action'];
 $last_action_setting=$settings.$q_list['last_action'];
 
+
 // Prepre to fetch all question
 // Initial curl request
 $ch1 = curl_init();
@@ -36,37 +51,48 @@ curl_setopt($ch1, CURLOPT_POSTFIELDS, $is_new_setting);
 curl_setopt($ch1, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch1, CURLOPT_SSL_VERIFYHOST, 0);
 curl_setopt($ch1, CURLOPT_SSL_VERIFYPEER, 0);
+curl_setopt($ch1, CURLOPT_TIMEOUT,600);
+
 curl_setopt($ch2, CURLOPT_URL, $datasource);
 curl_setopt($ch2, CURLOPT_HEADER, 0);
 curl_setopt($ch2, CURLOPT_POSTFIELDS, $frist_action_setting);
 curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch2, CURLOPT_SSL_VERIFYHOST, 0);
 curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, 0);
+curl_setopt($ch2, CURLOPT_TIMEOUT,600);
+
 curl_setopt($ch3, CURLOPT_URL, $datasource);
 curl_setopt($ch3, CURLOPT_HEADER, 0);
 curl_setopt($ch3, CURLOPT_POSTFIELDS, $last_action_setting);
 curl_setopt($ch3, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch3, CURLOPT_SSL_VERIFYHOST, 0);
 curl_setopt($ch3, CURLOPT_SSL_VERIFYPEER, 0);
+curl_setopt($ch3, CURLOPT_TIMEOUT,600);
+
 // prepare multi curl
 $mh = curl_multi_init();
 curl_multi_add_handle($mh,$ch1);
 curl_multi_add_handle($mh,$ch2);
 curl_multi_add_handle($mh,$ch3);
 
-$active = null;
-// process call and wait till all done
-do {
-    $mrc = curl_multi_exec($mh, $active);
-} while ($mrc == CURLM_CALL_MULTI_PERFORM);
-
-while ($active && $mrc == CURLM_OK) {
-    if (curl_multi_select($mh) != -1) {
+       $active = null;
         do {
             $mrc = curl_multi_exec($mh, $active);
         } while ($mrc == CURLM_CALL_MULTI_PERFORM);
-    }
-}
+   
+        while ($active && $mrc == CURLM_OK) {
+            // Wait for activity on any curl-connection
+            if (curl_multi_select($mh) == -1) {
+                usleep(1);
+            }
+   
+            // Continue to exec until curl is ready to
+            // give us more data
+            do {
+                $mrc = curl_multi_exec($mh, $active);
+            } while ($mrc == CURLM_CALL_MULTI_PERFORM);
+        }
+
 // close curl
 curl_multi_remove_handle($mh, $ch1);
 curl_multi_remove_handle($mh, $ch2);
