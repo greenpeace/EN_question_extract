@@ -1,17 +1,5 @@
 <?php
-/*
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-set_time_limit(300);
-*/
-/*
-$_REQUEST['m']='fetch';
-$_REQUEST['en_token']='ae10da26-53aa-461d-a7c6-99e60cdf12b6';
-$_REQUEST['is_new']='15031';
-$_REQUEST['first_action']='15032';
-$_REQUEST['last_action']='15033';
-*/
+
 if(!$_REQUEST['m']){
 	echo "<form method='post' action='?'>";
 	echo "<input type='hidden' name='m' value='fetch'>";
