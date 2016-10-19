@@ -1,4 +1,10 @@
 <?php
+/*
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+set_time_limit(300);
+*/
 
 if(!$_REQUEST['m']){
 	echo "<form method='post' action='?'>";
@@ -10,7 +16,7 @@ if(!$_REQUEST['m']){
 	echo "<input type='submit' value='Get it'>";
 	}
 elseif ($_REQUEST['m']=="fetch") {
-	echo "start fetch<br>";
+	
 	if(!($_REQUEST['is_new']&&$_REQUEST['first_action']&&$_REQUEST['last_action'])){echo "Please give correct information";exit;}
 	$en_token=$_REQUEST['en_token'];
 	$q_list['is_new']=$_REQUEST['is_new'];
@@ -114,29 +120,83 @@ for ($i=0;$i<$is_new_count;$i++){
 	$data[$is_new_data['rows'][$i]['columns'][6]['value']]['postcode']=$is_new_data['rows'][$i]['columns'][3]['value'];
 	$data[$is_new_data['rows'][$i]['columns'][6]['value']]['country']=$is_new_data['rows'][$i]['columns'][4]['value'];
 	$data[$is_new_data['rows'][$i]['columns'][6]['value']]['is_new']=$is_new_data['rows'][$i]['columns'][7]['value'];
+	if ($is_new_data['rows'][$i]['columns'][7]['value']=='y'){$is_new['y']++;}
+	elseif ($is_new_data['rows'][$i]['columns'][7]['value']=='n'){$is_new['n']++;}
 	}
 // Add first_action from result
 for ($i=0;$i<$first_action_count;$i++){
 	$key=$first_action_data['rows'][$i]['columns'][6]['value'];
+	$f_val=$first_action_data['rows'][$i]['columns'][7]['value'];
 	if (!$data[$key]['firstName']){$data[$key]['firstName']=$first_action_data['rows'][$i]['columns'][0]['value'];}
 	if (!$data[$key]['city']){$data[$key]['city']=$first_action_data['rows'][$i]['columns'][1]['value'];}
 	if (!$data[$key]['region']){$data[$key]['region']=$first_action_data['rows'][$i]['columns'][2]['value'];}
 	if (!$data[$key]['postcode']){$data[$key]['postcode']=$first_action_data['rows'][$i]['columns'][3]['value'];}
 	if (!$data[$key]['country']){$data[$key]['country']=$first_action_data['rows'][$i]['columns'][4]['value'];}
-	$data[$key]['first_action']=$first_action_data['rows'][$i]['columns'][7]['value'];
+	$data[$key]['first_action']=$f_val;
+// 55444 2016-10-05t06:28:07.857z newsletter-general email gpmyem-03 nexus 2016-09
+// 0: campaignid , 1: date time , 2: source medium campaign content
+	if ($f_val){
+		$f_val_s=explode(' ',$f_val);
+		if ($f_val_s[0]!='-'){
+			$datetime=explode('t',$f_val_s[1]);
+			$first_date[$datetime[0]]++;
+			$first[$f_val_s[0]]++;
+			}
+		}
 	}
 // Add last_action from result
 for ($i=0;$i<$last_action_count;$i++){
 	$key=$last_action_data['rows'][$i]['columns'][6]['value'];
+	$l_val=$last_action_data['rows'][$i]['columns'][7]['value'];
 	if (!$data[$key]['firstName']){$data[$key]['firstName']=$first_action_data['rows'][$i]['columns'][0]['value'];}
 	if (!$data[$key]['city']){$data[$key]['city']=$first_action_data['rows'][$i]['columns'][1]['value'];}
 	if (!$data[$key]['region']){$data[$key]['region']=$first_action_data['rows'][$i]['columns'][2]['value'];}
 	if (!$data[$key]['postcode']){$data[$key]['postcode']=$first_action_data['rows'][$i]['columns'][3]['value'];}
 	if (!$data[$key]['country']){$data[$key]['country']=$first_action_data['rows'][$i]['columns'][4]['value'];}
-	$data[$key]['last_action']=$last_action_data['rows'][$i]['columns'][7]['value'];
+	$data[$key]['last_action']=$l_val;
+	if ($l_val){
+		$l_val_s=explode(' ',$l_val);
+		if ($l_val_s[0]!='-'){
+			$datetime=explode('t',$l_val_s[1]);
+			$last_date[$datetime[0]]++;
+			$last[$l_val_s[0]]++;
+			}
+		}
+
+
+//	$l_val_s=explode(' ',$l_val);
+//	if (isset($l_val_s[0])){$last[$l_val_s[0]]++;}
 	}
 //var_dump($data);
 //$count=count($data);
+// display count of each isnew
+echo "new=y ".$is_new['y']."<br>";
+echo "new=n ".$is_new['n']."<br>";
+
+// display count of first campaign
+foreach ($first as $key=>$val){
+	echo "first campaign $key = $val<br>";
+	}
+echo "<br>";
+
+// display count of last campaign
+foreach ($last as $key=>$val){
+	echo "last campaign $key = $val<br>";
+	}
+echo "<br>";
+
+// display count of first campaign date
+foreach ($first_date as $key=>$val){
+	echo "First in $key = $val<br>";
+	}
+echo "<br>";
+
+// display count of lat campaign date
+foreach ($last_date as $key=>$val){
+	echo "Last in $key = $val<br>";
+	}
+echo "<br>";
+
 echo "<table border=\"1\"><tr><td>supporterId</td><td>firstName</td><td>city</td><td>region</td><td>postcode</td><td>country</td><td>is_new</td><td>first_action</td><td>last_action</td></tr>";
 foreach($data as $key=>$contain){
 	echo "<tr>";
