@@ -8,3 +8,5 @@ You need
 * is_new question ID
 * first_action question ID
 * last_action question ID
+
+# Currently EN return only 100 result for each question
